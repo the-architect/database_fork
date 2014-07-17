@@ -154,7 +154,7 @@ class DatabaseFork
   end
 
   def app_connection
-    @app_connection ||= YAML.load(ERB.new(open(File.join(@root_dir, '..', '..', 'config', 'database.yml')).read).result)
+    @app_connection ||= YAML.load(ERB.new(open(File.join(@root_dir, 'config', 'database.yml')).read).result)
   end
 
   def current_branch
