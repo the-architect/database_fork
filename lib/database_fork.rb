@@ -16,11 +16,14 @@ class DatabaseFork
   end
 
   # use DatabaseFork.new.run in your post-checkout hook
-  def initialize(config_file = '.db_forks.yml', logger = Logger.new(STDOUT))
-    @config_file = config_file
+  def initialize(root_dir, logger = Logger.new(STDOUT))
+    @root_dir = root_dir
+    @config_file = File.join(@root_dir, '.db_forks.yml')
     @logger = logger
+    @commands = []
   end
 
+  # TODO: simplify this somehow
   def run
     if config['ignore'].include?(current_branch)
       log_info 'This branch name is ignored in .db_fork.yml config. Skipping along.'
@@ -32,12 +35,7 @@ class DatabaseFork
         log_info 'database fork already exists'
         export_env
       else
-        log_info "Create a database fork '#{fork_db_name}'? [y|n|enter=ignore]"
-
-        # trick to read user input:
-        decision = IO.new(IO.sysopen('/dev/tty'), 'r').gets.chomp
-
-        case decision
+        case ask_user("Create database: '#{fork_db_name}'? (y(es), n(no), enter=ignore)")
           when 'y'
             create_database_fork!
             export_env
@@ -50,11 +48,16 @@ class DatabaseFork
         end
       end
     else
-      log_info 'not a feature branch. not creating database fork.'
       reset_env
     end
 
     save_config
+  end
+
+
+  def ask_user(question)
+    log_info question
+    IO.new(IO.sysopen('/dev/tty'), 'r').gets.chomp
   end
 
   def create_database_fork!
@@ -68,14 +71,17 @@ class DatabaseFork
     end
   end
 
+  # TODO: refactor to adapter
   def create_dump(env = 'development')
     run_command %Q{mysqldump #{connection_params(env)} --routines --triggers -C #{source_db(env)} > #{dump_file_path(env)}}, "dumping #{source_db(env)}"
   end
 
+  # TODO: refactor to adapter
   def create_database(env = 'development')
     run_command %Q{mysql #{connection_params(env)} -e "CREATE DATABASE IF NOT EXISTS #{fork_db_name(env)} CHARACTER SET '#{character_set}' COLLATE '#{collation}';"}, "create database #{fork_db_name(env)}"
   end
 
+  # TODO: refactor to adapter
   def import_dump(env = 'development')
     run_command %Q{mysql #{connection_params(env)} -C -A -D#{fork_db_name(env)} < #{dump_file_path(env)}}, 'importing dump'
   end
@@ -85,6 +91,7 @@ class DatabaseFork
   end
 
   def reset_env
+    log_info 'Resetting fork information'
     run_command "rm ./tmp/DATABASE_FORK_DEVELOPMENT", 'rm DATABASE_FORK_DEVELOPMENT'
     run_command "rm ./tmp/DATABASE_FORK_TEST", 'rm DATABASE_FORK_TEST'
   end
@@ -94,14 +101,15 @@ class DatabaseFork
     run_command "echo #{fork_db_name('test')} > ./tmp/DATABASE_FORK_TEST", 'setting DATABASE_FORK_TEST'
   end
 
-  def run_command(command, message)
+  def run_command(command, message, dry_run = false)
     log_info message
     log_debug command
-    `#{command}`
+    @commands << [command, message]
+    `#{command}` unless dry_run
   end
 
   def dump_file_path(env = 'development')
-    "./tmp/dump_#{env}.sql"
+    File.join(@root_dir, 'tmp', "dump_#{env}.sql")
   end
 
   # could be queried from source_db:
@@ -146,23 +154,21 @@ class DatabaseFork
   end
 
   def app_connection
-    @app_connection ||= YAML.load(ERB.new(open(File.join(File.dirname(__FILE__), '..', '..', 'config', 'database.yml')).read).result)
+    @app_connection ||= YAML.load(ERB.new(open(File.join(@root_dir, '..', '..', 'config', 'database.yml')).read).result)
   end
 
   def current_branch
     @current_branch ||= `git rev-parse --abbrev-ref HEAD`.strip.gsub('/', '_')
   end
 
+  DEFAULTS = {
+    'check_branch_name_regex' => '^feature_',
+    'ignore' => [],
+    'environments' => %w(development test)
+  }
+
   def config
-    @config ||= begin
-      config = {
-        'check_branch_name_regex' => '^feature_',
-        'ignore' => [],
-        'environments' => %w(development test)
-      }
-      config.merge! YAML.load(open(@config_file).read) if File.exists?(@config_file)
-      config
-    end
+    @config ||= DEFAULTS.merge(YAML.load(open(@config_file).read)) rescue DEFAULTS
   end
 
   def save_config
