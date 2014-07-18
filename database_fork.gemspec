@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = 'database_fork'
-  spec.version       = '0.0.3'
+  spec.version       = '0.0.4'
   spec.authors       = ['the-architect']
   spec.email         = ['marcel.scherf@epicteams.com']
   spec.summary       = %q{Fork your database}
