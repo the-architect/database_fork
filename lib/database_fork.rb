@@ -38,7 +38,6 @@ class DatabaseFork
     reset_commands!
   end
 
-  # TODO: simplify this somehow
   def run
     if Regexp.new(config['check_branch_name_regex']).match(current_branch)
       log_info 'branch qualified for database forking'

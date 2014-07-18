@@ -69,14 +69,18 @@ class DBFork
     @connection['database']
   end
 
-  def reset_env
+  def reset_env(dry_run = false)
+    reset_commands!
     filename = File.join(@root_dir, 'tmp', "DATABASE_FORK_#{@env.upcase}")
     record_command "rm #{filename}", "removing DATABASE_FORK_#{@env.upcase}"
+    execute_commands unless dry_run
   end
 
-  def export_env
+  def export_env(dry_run = false)
+    reset_commands!
     filename = File.join(@root_dir, 'tmp', "DATABASE_FORK_#{@env.upcase}")
     record_command "echo #{target_name} > #{filename}", "setting DATABASE_FORK_#{@env.upcase}"
+    execute_commands unless dry_run
   end
 
   def delete_dump_file
