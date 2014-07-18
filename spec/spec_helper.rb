@@ -4,15 +4,13 @@ require 'logger'
 require 'fileutils'
 require 'stringio'
 
-# create && clean up tmp directory
-
 def tmp_path
-  File.join(File.dirname(__FILE__), 'tmp')
+  $tmp_path ||= File.join(File.dirname(__FILE__), 'tmp')
 end
 
 def clean_tmp
-  FileUtils.mkdir_p(tmp_path)
-  FileUtils.rm_r(Dir[File.join(tmp_path, '*')])
+  FileUtils.mkdir_p(tmp_path) # just in case it does not exist
+  FileUtils.rm_r tmp_path
 end
 
 
