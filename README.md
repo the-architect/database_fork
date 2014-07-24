@@ -6,7 +6,7 @@ Create a copy of your development and test databases when you switch git branche
 
 Add this line to your application's Gemfile:
 
-    gem 'database_fork', '>= 0.0.7'
+    gem 'database_fork', '>= 0.0.8'
 
 And then execute:
 
@@ -25,11 +25,15 @@ Now add this to the .git/hooks/post-checkout file:
     
     #!/usr/bin/env ruby
     if File.exists?(File.join(ENV['PWD'], 'Gemfile'))
-      require 'rubygems'
-      require 'bundler/setup'
-      require 'database_fork'
-    
-      DatabaseFork.new(ENV['PWD']).run
+      begin
+        require 'rubygems'
+        require 'bundler/setup'
+        require 'database_fork'
+      
+        DatabaseFork.new(ENV['PWD']).run
+      rescue LoadError
+        puts 'DatabaseFork: Could not load DatabaseFork gem.'
+      end
     else
       puts "DatabaseFork: No Gemfile found in #{ENV['PWD']}. Run from to your Application's root!"
     end
