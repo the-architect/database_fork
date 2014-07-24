@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['marcel.scherf@epicteams.com']
   spec.summary       = %q{Fork your database}
   spec.description   = %q{Fork your database}
-  spec.homepage      = 'http://github.com/'
+  spec.homepage      = 'http://github.com/the-architect/database_fork'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")
