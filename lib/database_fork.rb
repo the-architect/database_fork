@@ -43,6 +43,7 @@ class DatabaseFork
       log_info 'branch qualified for database forking'
 
       config['environments'].each do |env|
+        # TODO: chose adapter based on connection information (Rails database.yml "adapter")
         adapter = MysqlFork.new(@root_dir, app_connection[env], env, current_branch, @logger)
 
         if adapter.exists?
