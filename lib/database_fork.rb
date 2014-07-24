@@ -39,7 +39,7 @@ class DatabaseFork
   end
 
   def run
-    if Regexp.new(config['check_branch_name_regex']).match(current_branch)
+    if qualified_branch?(current_branch) && !ignored_branch?(current_branch)
       log_info 'branch qualified for database forking'
 
       config['environments'].each do |env|
@@ -61,7 +61,6 @@ class DatabaseFork
               adapter.reset_env
           end
         end
-
       end
 
     else
@@ -71,6 +70,14 @@ class DatabaseFork
     save_config
   end
 
+  def qualified_branch?(branch_name)
+    Regexp.new(config['check_branch_name_regex']).match(branch_name)
+  end
+
+  def ignored_branch?(branch_name)
+    config['ignore'] ||= []
+    config['ignore'].include?(branch_name)
+  end
 
   def ask_user(question)
     log_info question
@@ -97,6 +104,7 @@ class DatabaseFork
   end
 
   def save_config
+    config['ignore'].uniq!
     File.open(@config_file, 'w') do |f|
       f.puts @config.to_yaml
     end
