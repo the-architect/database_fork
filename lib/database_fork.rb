@@ -24,7 +24,7 @@ class DatabaseFork
 
     def reset_all_environments!(root_dir, logger = Logger.new(STDOUT))
       logger.info 'removing DATABASE_FORK_* files'
-      FileUtils.rm Dir[File.join(root_dir, 'tmp', 'DATABASE_FORK_*')]
+      FileUtils.rm Dir[File.join(root_dir, 'tmp', 'DATABASE_FORK_*')], force: true
     end
 
   end
