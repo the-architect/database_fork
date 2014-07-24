@@ -6,7 +6,7 @@ Create a copy of your development and test databases when you switch git branche
 
 Add this line to your application's Gemfile:
 
-    gem 'database_fork', '>= 0.0.6'
+    gem 'database_fork', '>= 0.0.7'
 
 And then execute:
 
