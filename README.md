@@ -6,7 +6,7 @@ Create a copy of your development and test databases when you switch git branche
 
 Add this line to your application's Gemfile:
 
-    gem 'database_fork', '>= 0.0.5'
+    gem 'database_fork', '>= 0.0.6'
 
 And then execute:
 
@@ -43,6 +43,26 @@ Rails: add this line at the end of your application.rb:
         'DatabaseFork not available'
       end
     end
+    
+To dynamically load the database clone, add this to each environment in your Rails database.yml:
+
+    development:
+      database: <%= ENV['DATABASE_FORK_DEVELOPMENT'] || 'my_app_development' %>
+
+## Limitations
+
+- only tested with Rails
+- currently only works with Mysql
+
+## TODO:
+
+- add postgresql adapter
+- improve specs (as usual ;) )
+
+## Help is welcome
+
+If you want to contribute an adapter, write specs or refactor the gem, please feel free to send a pull request!
+
 
 ## Contributing
 
