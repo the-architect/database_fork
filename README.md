@@ -1,24 +1,48 @@
 # DatabaseFork
 
-TODO: Write a gem description
+Create a copy of your development and test databases when you switch git branches.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'database_fork'
+    gem 'database_fork', '>= 0.0.5'
 
 And then execute:
 
     $ bundle
+    
+Add this file to your .gitignore:
 
-Or install it yourself as:
+    .db_forks.yml
 
-    $ gem install database_fork
+Add the git hook:
 
-## Usage
+    touch .git/hooks/post-checkout
+    sudo chmod +x .git/hooks/post-checkout
+    
+Now add this to the .git/hooks/post-checkout file:
+    
+    #!/usr/bin/env ruby
+    if File.exists?(File.join(ENV['PWD'], 'Gemfile'))
+      require 'rubygems'
+      require 'bundler/setup'
+      require 'database_fork'
+    
+      DatabaseFork.new(ENV['PWD']).run
+    else
+      puts "DatabaseFork: No Gemfile found in #{ENV['PWD']}. Run from to your Application's root!"
+    end
 
-TODO: Write usage instructions here
+Rails: add this line at the end of your application.rb:
+    
+    unless Rails.env.production?
+      begin
+        DatabaseFork.setup_env(Rails.env, Rails.root)
+      rescue LoadError
+        'DatabaseFork not available'
+      end
+    end
 
 ## Contributing
 
